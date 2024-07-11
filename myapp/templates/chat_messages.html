@@ -1,0 +1,71 @@
+<!-- chat_messages.html
+{% if twilio_messages %}
+    <p>Messages count: {{ twilio_messages|length }}</p>
+    {% for message in twilio_messages %}
+        <div>
+            <p>{{ message.sender }} ({{ message.timestamp }})</p>
+            <p>{{ message.message }}</p>
+            <form action="{{ message.reply_url }}" method="post">
+                {% csrf_token %}
+                <textarea name="reply_message" rows="3" cols="70" placeholder="Type your reply..."></textarea>
+                <input type="hidden" name="to_number" value=`{{ message.sender }}`>
+                <br>
+                <button type="submit">Reply</button>
+            </form>
+        </div>
+        <hr>
+    {% endfor %}
+{% else %}
+    <p>No messages available.</p>
+{% endif %} -->
+<style>
+    .chat-message {
+        background-color: #f9f9f9;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+    .chat-message p {
+        margin: 5px 0;
+    }
+    .chat-message-form textarea {
+        width: 100%;
+        padding: 10px;
+        margin-top: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+    .chat-message-form button {
+        margin-top: 10px;
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+    .chat-message-form button:hover {
+        background-color: #0056b3;
+    }
+</style>
+{% if twilio_messages %}
+    <p>Messages count: {{ twilio_messages|length }}</p>
+    {% for message in twilio_messages %}
+        <div class="chat-message">
+            <p><strong>From:</strong> {{ message.customer_name }} ({{ message.sender }})</p>
+            <p><strong>Time:</strong> {{ message.timestamp }}</p>
+            <p><strong>Message:</strong> {{ message.message }}</p>
+            <form action="{{ message.reply_url }}" method="post" class="chat-message-form">
+                {% csrf_token %}
+                <textarea name="reply_message" rows="3" placeholder="Type your reply..."></textarea>
+                <input type="hidden" name="to_number" value="{{ message.sender }}">
+                <button type="submit">Reply</button>
+            </form>
+        </div>
+    {% endfor %}
+{% else %}
+    <p>No messages available.</p>
+{% endif %}

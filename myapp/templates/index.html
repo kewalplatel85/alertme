@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mailbox Notification</title>
+    <style>
+          /* General styling */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f7f7;
+            margin: 0;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+        }
+        input[type="text"], input[type="number"], button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Navigation header styling */
+        .navbar {
+            background-color: #333;
+            overflow: hidden;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+        .navbar a {
+            float: left;
+            display: block;
+            color: white;
+            text-align: center;
+            padding: 14px 20px;
+            text-decoration: none;
+        }
+        .navbar a:hover {
+            background-color: #ddd;
+            color: black;
+        }
+
+        /* Chat Widget Styling */
+        .chat-widget {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 100%;
+            max-width: 360px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+        }
+        .chat-widget:hover {
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            border-bottom: 1px solid #ddd;
+        }
+        .chat-input-container {
+            display: flex;
+            padding: 10px;
+            background-color: #f9f9f9;
+        }
+        .chat-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-right: 10px;
+            box-sizing: border-box;
+        }
+        .chat-submit {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .chat-submit:hover {
+            background-color: #0056b3;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .chat-widget {
+                width: 90%;
+                right: 5%;
+                bottom: 20px;
+            }
+        }
+        @media (max-width: 480px) {
+            .chat-widget {
+                width: 100%;
+                right: 0;
+                bottom: 0;
+                border-radius: 0;
+            }
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        // Function to scroll chat messages to bottom
+        function scrollToBottom() {
+            var chatMessages = document.getElementById('chat-messages');
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Function to update chat messages
+        function updateChat() {
+            $.ajax({
+                url: '/fetch-messages/',  // Update this URL as per your Django URL configuration
+                success: function(data) {
+                    $('#chat-messages').html(data);
+                    scrollToBottom();
+                }
+            });
+        }
+         
+        // Function to send a reply
+        function sendReply() {
+            var message = $('#message-input').val().trim();
+            if (message !== '') {
+                // Fetch CSRF token
+                var csrftoken = getCookie('csrftoken');
+
+                // Send AJAX request with CSRF token
+                $.ajax({
+                    url: '/send-reply/',
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrftoken },
+                    data: { reply_message: message },
+                    success: function(response) {
+                        $('#message-input').val('');
+                        updateChat();
+                    }
+                });
+            }
+        }
+
+        // Call updateChat every 5 seconds
+        $(document).ready(function() {
+            updateChat();
+            setInterval(updateChat, 200000);
+            scrollToBottom();
+        });
+    </script>
+    <script>
+        function updateTrackingFields() {
+            const numPackages = document.getElementById('id_num_packages').value;
+            const trackingFieldsContainer = document.getElementById('tracking-fields-container');
+            trackingFieldsContainer.innerHTML = '';
+
+            for (let i = 0; i < numPackages; i++) {
+                const trackingField = document.createElement('div');
+                trackingField.innerHTML = `
+                    <label for="id_tracking_number_${i+1}">Tracking Number ${i+1}</label>
+                    <input type="text" name="tracking_number_${i+1}" id="id_tracking_number_${i+1}" maxlength="100" required>
+                `;
+                trackingFieldsContainer.appendChild(trackingField);
+            }
+        }
+         // Function to print the label with mailbox number and customer name
+         function printLabel(mailboxNumber, customerName) {
+            var labelDiv = document.getElementById('label');
+            labelDiv.innerHTML = `<p>Mailbox Number: ${mailboxNumber}</p><p>Customer Name: ${customerName}</p>`;
+        }
+
+
+        function sendSMS() {
+            const mailboxNumber = document.getElementById('id_mailbox_number').value;
+            const numPackages = document.getElementById('id_num_packages').value;
+            const trackingNumbers = [];
+
+            for (let i = 1; i <= numPackages; i++) {
+                trackingNumbers.push(document.getElementById(`id_tracking_number_${i}`).value);
+            }
+
+            const formData = {
+                mailbox_number: mailboxNumber,
+                num_packages: numPackages,
+                tracking_numbers: trackingNumbers
+            };
+
+            $.ajax({
+                url: '/send-sms/',  // Replace with your endpoint URL
+                method: 'POST',
+                data: formData,
+                success: function(response) {
+                    alert('SMS sent successfully!');
+                    // Optionally clear form fields or perform other actions upon success
+                    document.getElementById('id_mailbox_number').value = '';
+                    document.getElementById('id_num_packages').value = '';
+                    for (let i = 1; i <= numPackages; i++) {
+                        document.getElementById(`id_tracking_number_${i}`).value = '';
+                    }
+                    printLabel(mailboxNumber, customerName);
+                },
+                error: function(xhr, status, error) {
+                    alert('Failed to send SMS. Please try again.');
+                    console.error(xhr.responseText);
+                }
+            });
+        }
+
+
+        document.addEventListener('DOMContentLoaded', (event) => {
+            document.getElementById('id_num_packages').addEventListener('input', updateTrackingFields);
+        });
+    </script>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('file-input').addEventListener('change', handleFileSelect, false);
+        });
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const csvData = e.target.result;
+                    parseCSV(csvData);
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        function parseCSV(data) {
+            Papa.parse(data, {
+                header: true,
+                dynamicTyping: true,
+                complete: function(results) {
+                    displayTable(results.data);
+                }
+            });
+        }
+
+        function displayTable(data) {
+            const tableContainer = document.getElementById('csv-table-container');
+            tableContainer.innerHTML = ''; // Clear any existing content
+
+            if (data.length === 0) {
+                tableContainer.innerHTML = '<p>No data available in CSV file.</p>';
+                return;
+            }
+
+            const table = document.createElement('table');
+            table.style.width = '100%';
+            table.style.borderCollapse = 'collapse';
+
+            // Create table header
+            const thead = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+            Object.keys(data[0]).forEach(key => {
+                const th = document.createElement('th');
+                th.textContent = key;
+                th.style.border = '1px solid #ccc';
+                th.style.padding = '8px';
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+
+            // Create table body
+            const tbody = document.createElement('tbody');
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                Object.values(row).forEach(value => {
+                    const td = document.createElement('td');
+                    td.textContent = value;
+                    td.style.border = '1px solid #ccc';
+                    td.style.padding = '8px';
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+
+            tableContainer.appendChild(table);
+        }
+    </script>
+</head>
+<body>
+    <div class="navbar">
+        <a href="/">Home</a>
+        <a href="/package-log/">Package Log</a>
+        <a href="{% url 'custom_sms' %}" class="btn btn-primary" onclick="window.location.href = this.href;">Custom SMS</a>
+    </div>
+    <br><br>
+
+    <h1>Mailbox and Package Information</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ package_form.as_p }}
+        <!-- <input type="text" name="customer_name" id="customer_name" readonly value="{{ customer.name }}">
+        <br><br>
+        <label for="phone_number">Phone Number:</label>
+        <input type="text" name="phone_number" id="phone_number" readonly value="{{ customer.phone_number }}"> -->
+        <!-- <br><br> -->
+        <div id="tracking-fields-container">
+            {% if tracking_form %}
+                {{ tracking_form.as_p }}
+            {% endif %}
+            {% if messages %}
+                {% for message in messages %}
+                    {% if message.tags %}  
+                        <script>alert("{{ message }}")</script> 
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+        </div>
+        <button type="submit">Send SMS</button>
+    </form>
+
+    <input type="file" id="file-input" accept=".csv">
+    <div id="csv-table-container"></div>
+
+
+<!-- 
+    <a href="{% url 'custom_sms' %}" class="btn btn-primary">Custom SMS</a> -->
+    
+
+    <div class="chat-widget">
+        <div class="chat-messages" id="chat-messages">
+            <!-- Chat messages will be loaded here -->
+            {% include 'chat_messages.html' %}
+        </div>
+    </div>
+
+
+</body>
+</html>
