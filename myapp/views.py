@@ -20,10 +20,7 @@ customer_data['Phone Number'] = customer_data['Phone Number'].apply(lambda x: re
 customer_data['Phone Number'] = customer_data['Phone Number'].apply(lambda x: x[1:] if x.startswith('1') else x)
 
 
-<<<<<<< HEAD
-=======
-# Twilio credentials (retrieved from environment variables)
->>>>>>> b447718 (environment created)
+
 ACCOUNT_SID = config('TWILIO_ACCOUNT_SID')
 AUTH_TOKEN = config('TWILIO_AUTH_TOKEN')
 TWILIO_PHONE_NUMBER = config('TWILIO_PHONE_NUMBER')
