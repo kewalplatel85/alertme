@@ -14,7 +14,7 @@ from .models import ScannedPackageLog
 from decouple import config
 
 # Load customer data
-customer_data = read_customer_data("myproject\data\CurrentMailboxes.csv")
+customer_data = read_customer_data("myproject/data/CurrentMailboxes.csv")
 
 customer_data['Phone Number'] = customer_data['Phone Number'].apply(lambda x: re.sub(r'\D', '', str(x)))
 customer_data['Phone Number'] = customer_data['Phone Number'].apply(lambda x: x[1:] if x.startswith('1') else x)
