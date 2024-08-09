@@ -192,4 +192,12 @@ def phone_number_validator(phone_number):
 def package_log(request):
     logs = ScannedPackageLog.objects.all().order_by('-timestamp')  
     # print(logs)
+    if request.method == 'POST':
+        for log in logs:
+            status = request.POST.get(f'status_{log.id}')
+            if status:
+                log.status = status
+                log.save()
+        return redirect('package_log')
+
     return render(request, 'package_log.html', {'logs': logs})

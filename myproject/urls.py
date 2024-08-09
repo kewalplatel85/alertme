@@ -24,6 +24,7 @@ urlpatterns = [
     path('send-reply/', views.send_reply, name='send_reply'),
     # path('send-reply/<str:sender>/', views.send_reply, name='send_reply'), 
     path('package-log/', views.package_log, name='package_log'),  
+    path('update-log/', views.package_log, name='update_log'),
     path('custom_sms/', views.custom_sms, name='custom_sms'),
     path('', views.index, name='index'),
 ]

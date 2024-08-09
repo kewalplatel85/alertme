@@ -22,6 +22,8 @@ class ScannedPackageLog(models.Model):
     phone_number = models.CharField(max_length=20)
     tracking_number = models.CharField(max_length=255)
     timestamp = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=10, choices=[('Incoming', 'Incoming'), ('Outgoing', 'Outgoing')], default='Incoming')  # New field for status
 
     def __str__(self):
         return f"{self.customer_name} - {self.tracking_number}"
+
